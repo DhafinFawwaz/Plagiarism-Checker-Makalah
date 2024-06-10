@@ -1,113 +1,197 @@
-import Image from "next/image";
+"use client";
+import Link from "next/link";
+import PieChart from "./components/PieChart";
+import React, { useEffect, useState } from "react";
+import { Paper } from "./paper/paper";
+import { PlagiarizedPaper } from "./paper/plagiarized-paper";
+
+export type PlagiarizeResult = {
+  percentage: number;
+  plagiarizedPaper: PlagiarizedPaper[];
+  selectedPaper: Paper;
+}
 
 export default function Home() {
+  // from user iput
+  const [pdfFile, setPdfFile] = useState<File>(new File([], "-", undefined));
+
+  // Blocks check button when API is loading
+  const [isApiLoading, setIsApiLoading] = useState<boolean>(false);
+  
+  // from API
+  const [plagiarizedResult, setPlagiarizedResult] = useState<PlagiarizeResult>({
+    percentage: -1,
+    plagiarizedPaper: [
+      { title: "Paper 1", href: "https://example.com/paper1.pdf", content: "abcd abcd efgh abcd", plagiarizedList: ["bcd", "d ab", "zzz"], percentage: 20},
+      { title: "Paper 2", href: "https://example.com/paper1.pdf", content: "abcd abcd efgh abcd", plagiarizedList: ["efgh "], percentage: 30},
+      { title: "Paper 3", href: "https://example.com/paper1.pdf", content: "abcd abcd efgh abcd", plagiarizedList: ["gh ab", "abc"], percentage: 50},
+    ],
+    selectedPaper: { title: "Paper 1", href: "https://example.com/paper1.pdf", content: "abcd abcd efgh abcd"}
+  });
+
+  // From selection by user
+  // const [choosenPlagiarizedPaper, setChoosenPlagiarizedPaper] = useState<PlagiarizedPaper>(plagiarizedResult.plagiarizedPaper[0]);
+  const [choosenIndex, setChoosenIndex] = useState<number>(0);
+
+  function getFileSizeFormat(size: number) {
+    size /= 1024;
+    if(size < 1024) return Math.round(size*100)/100 + " KB";
+
+    return Math.round(size/1024*100)/100 + " MB";
+  }
+
+  function onFileChanged(e: React.ChangeEvent<HTMLInputElement>) {
+    if(!e.target.files) return;
+    const file = e.target.files[0];
+
+    if (file) {
+      setPdfFile(file);
+    }
+  }
+
+  function block(content: string){
+    return <span id="marked" className="inline bg-indigo-600">{content}</span>;
+  }
+  function getPlagiarizedBlock(content: string, plagiarizedList: string[]): JSX.Element {
+    // sort
+    plagiarizedList.sort((a, b) => b.length - a.length);
+
+    const escapeRegExp = (string: string) =>
+      string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  
+    const regexPattern = plagiarizedList.map(escapeRegExp).join('|');
+    const regex = new RegExp(`(${regexPattern})`, 'gi');
+  
+    const parts = content.split(regex);
+    const highlightedContent = parts.map((part, index) => {
+      if (plagiarizedList.some(plagiarized => new RegExp(`^${escapeRegExp(plagiarized)}$`, 'i').test(part))) {
+        return block(part);
+      }
+      return part;
+    });
+  
+    return <p className="text-justify text-sm font-normal w-full">{highlightedContent}</p>;
+  }
+  
+
+  // API call
+  async function startCheck(){
+    if(!pdfFile || pdfFile.name === "-") return;
+
+    const formData = new FormData();
+    formData.append("file", pdfFile);
+    setIsApiLoading(true);
+    try{
+      const res = await fetch("/api/check", {
+        method: "POST",
+        body: formData
+      });
+      if(!res.ok) {
+        setIsApiLoading(false);
+        return;
+      }
+  
+      const data = await res.json();
+      if(data.error) {
+        setIsApiLoading(false);
+        alert(data.error);
+        return;
+      }
+      setPlagiarizedResult(data);
+      chooseIndex(0);
+
+    } catch(e) {
+      console.error(e);
+    }
+    setIsApiLoading(false);
+  }
+
+  async function chooseIndex(index: number){
+    setChoosenIndex(index);
+  }
+
+  useEffect(() => {
+    document.getElementById("marked")?.scrollIntoView();
+  }, [chooseIndex])
+  
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <main className="flex min-h-screen flex-col items-center justify-between py-4 px-4 sm:px-16 md:px-24 lg:px-36 bg-zinc-950">
+      
+      <div className="flex flex-col w-full">
+        <h1 className="text-center mb-4">Plagiarism Checker</h1>
+        <p className="font-normal mb-4">List of papers that will be checked can be found <Link href="/papers" className="text-blue-400 hover:text-indigo-500">here</Link></p>
+
+        {/* Form */}
+        <div className="grid grid-cols-2 gap-4 w-full">
+          
+          {/* Drag & drop file */}
+          <input id="file-input" type="file" accept=".pdf" hidden onChange={onFileChanged}/>
+          <label htmlFor="file-input" className="w-full bg-zinc-900 rounded-xl flex flex-col items-center justify-center h-full hover:bg-zinc-700 cursor-pointer duration-100">
+            <div>Select File Here</div>
+            <div className="text-zinc-400 text-sm">PDF File only</div>
+          </label>
+          
+          {/* File info */}
+          <div className="h-36 justify-between flex flex-col">
+            <div>
+              <div>Selected File:</div> <div className="text-sm">{pdfFile.name}</div>
+              <div className="h-1"></div>
+              <div>Size:</div> <div className="text-sm">{pdfFile.size === 0 ? "-" : getFileSizeFormat(pdfFile.size)}</div>
+            </div>
+            <div className="h-1"></div>
+            <button onClick={startCheck} className="px-4 py-2 w-full justify-center disabled:bg-zinc-600 disabled:text-zinc-300 disabled:cursor-not-allowed" disabled={isApiLoading}>{!isApiLoading ? "Check!" : "Checking..."}</button>
+          </div>
         </div>
+
+      
+        {/* Result */}
+        {plagiarizedResult.percentage === -1 ? <></> : <>
+        
+        <div className="mt-4"></div>
+        <div className="gap-4 flex flex-col-reverse sm:flex-row w-full">
+          
+          <div className="flex flex-col bg-zinc-900 rounded-xl flex-1 overflow-clip border-16 border-zinc-900">
+            <h2 className="mb-2 w-full text-center">Result</h2>
+            <div className="w-full">
+              {getPlagiarizedBlock(plagiarizedResult.selectedPaper.content, plagiarizedResult.plagiarizedPaper[choosenIndex].plagiarizedList)}
+            </div>
+            <p></p>
+          </div>
+
+          {/* Chart */}
+          <div className="flex flex-col items-center bg-zinc-900 rounded-xl p-4 w-full sm:w-56 md:w-72 lg:w-80">
+            <div className="font-bold text-xl">Plagiarized</div>
+            <PieChart plagiarizedPercentage={plagiarizedResult.percentage}></PieChart>
+
+            <div className="gap-3 flex flex-col mt-3 w-full">
+
+              {/* Select Button */}
+              {plagiarizedResult.plagiarizedPaper.map((paper, index) => (<>
+                <button key={index} onClick={e => chooseIndex(index)} className={"bg-zinc-800 rounded-xl px-2 py-2 w-full h-16 flex gap-4 hover:bg-zinc-700 focus:ring-rose-500 focus:ring-4 " + (choosenIndex!==index ? "" : "ring-4 ring-rose-800")}>
+                  
+                  <div className="font-bold flex items-center justify-center ml-2 h-full">
+                    {paper.percentage}%
+                  </div>
+                  
+                  <div className="text-sm text-left w-full h-full flex items-center">
+                    <div className="line-clamp-3">{paper.title}</div>
+                  </div>
+                  <div className="h-full flex flex-row items-center">
+                    <a target="_blank" href={paper.href} className="w-12 h-12 p-1 rounded-xl hover:bg-white flex justify-center items-center group duration-150">
+                      <img src="/visit.svg" className="w-6 h-6 invert group-hover:invert-0 duration-150" />
+                    </a>
+                  </div>
+                </button>
+              </>))}
+            </div>
+
+          </div>
+        </div>
+
+        </>}
+
       </div>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
     </main>
   );
 }
