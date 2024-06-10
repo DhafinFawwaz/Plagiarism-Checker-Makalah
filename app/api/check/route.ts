@@ -15,6 +15,7 @@ export async function POST(req: Request) {
     const content = await extractPdfTextContentFromBuffer(Buffer.from(pdfBuffer));
     if(!content || content === "") return NextResponse.json({ error: "Not a valid pdf file!" });
     const dataClean = loadDataClean();
+    console.log(dataClean[5000].title)
     
     const result = findPlagiarism(content, dataClean);
     return NextResponse.json(result);
