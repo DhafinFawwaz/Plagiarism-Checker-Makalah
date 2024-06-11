@@ -7,8 +7,8 @@ export class Paper {
         this.href = href;
         this.content = "";
     }
-
-    public toString() {
-        return `${this.title} ${this.href}`;
-    }
 }
+
+
+
+

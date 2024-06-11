@@ -6,7 +6,6 @@ import { cosineSimilarity, hammingDistance, jaccardSimilarity, kmp, levenshteinD
 const SHINGLES_AMOUNT = 5;
 const LEVENSHTEIN_THRESHOLD = 0.5;
   
-// content is still not clean
 export function findPlagiarism(paper: Paper, data: Paper[]): PlagiarizeResult{
     const startTime = performance.now();
     const dirtyContent = paper.content;

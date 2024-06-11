@@ -4,7 +4,6 @@ import PieChart from "./components/PieChart";
 import React, { useEffect, useState } from "react";
 import { Paper } from "./paper/paper";
 import { PlagiarizedPaper } from "./paper/plagiarized-paper";
-import { shingles } from "./api/check/algorithm";
 
 export type PlagiarizeResult = {
   percentage: number;
