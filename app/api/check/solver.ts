@@ -7,6 +7,7 @@ export function findPlagiarism(dirtyContent: string, data: Paper[]): PlagiarizeR
     const content = clean(dirtyContent);
     const result: PlagiarizeResult = {
         percentage: 30,
+        executionTime: 0,
         plagiarizedPaper: [
             { title: "Paper 1", href: "https://example.com/paper1.pdf", content: "", plagiarizedList: ["pengambilan mata kuliah", "d ab", "zzz"], percentage: 20},
             { title: "Paper 2", href: "https://example.com/paper1.pdf", content: "", plagiarizedList: ["ah text dan sebuah pola, d"], percentage: 30},

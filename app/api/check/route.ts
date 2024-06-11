@@ -17,7 +17,9 @@ export async function POST(req: Request) {
     const dataClean = loadDataClean();
     console.log(dataClean[5000].title)
     
+    const startTime = performance.now();
     const result = findPlagiarism(content, dataClean);
+    result.executionTime = Math.round((performance.now() - startTime)*100)/100;
     return NextResponse.json(result);
 }
 

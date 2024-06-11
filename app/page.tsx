@@ -9,6 +9,7 @@ export type PlagiarizeResult = {
   percentage: number;
   plagiarizedPaper: PlagiarizedPaper[];
   selectedPaper: Paper;
+  executionTime: number;
 }
 
 export default function Home() {
@@ -21,6 +22,7 @@ export default function Home() {
   // from API
   const [plagiarizedResult, setPlagiarizedResult] = useState<PlagiarizeResult>({
     percentage: -1,
+    executionTime: 0,
     plagiarizedPaper: [
       { title: "Paper 1", href: "https://example.com/paper1.pdf", content: "abcd abcd efgh abcd", plagiarizedList: ["bcd", "d ab", "zzz"], percentage: 20},
       { title: "Paper 2", href: "https://example.com/paper1.pdf", content: "abcd abcd efgh abcd", plagiarizedList: ["efgh "], percentage: 30},
@@ -151,7 +153,10 @@ export default function Home() {
         <div className="gap-4 flex flex-col-reverse sm:flex-row w-full">
           
           <div className="flex flex-col bg-zinc-900 rounded-xl flex-1 overflow-clip border-16 border-zinc-900">
-            <h2 className="mb-2 w-full text-center">Result</h2>
+            <div className="flex gap-2 w-full justify-center">
+              <h2 className="mb-2 ">Result</h2>
+              <h2 className="mb-2 text-left font-normal text-sm mt-1">(Done in {plagiarizedResult.executionTime} ms)</h2>
+            </div>
             <div className="w-full">
               {getPlagiarizedBlock(plagiarizedResult.selectedPaper.content, plagiarizedResult.plagiarizedPaper[choosenIndex].plagiarizedList)}
             </div>
