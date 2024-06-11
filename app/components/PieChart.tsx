@@ -46,7 +46,7 @@ export default function PieChart({plagiarizedPercentage}: PieChartProps) {
     };
     
     return <div className="relative w-32 h-32 justify-center items-center flex">
-        <div className="absolute mt-2 text-2xl font-bold">
+        <div className="absolute mt-2 text-lg font-bold">
             {plagiarizedPercentage}%
         </div>
         <Doughnut data={finalData} options={options} />

@@ -5,10 +5,12 @@
  * @param n 
  * @returns 
  */
-export function nGrams(content: string, n: number): string[] {
+export function shingles(content: string, n: number): string[] {
     const nGrams: string[] = [];
-    for(let i = 0; i < content.length - n; i++){
-        nGrams.push(content.slice(i, i+n));
+    const split = content.split(' ');
+    for(let i = 0; i < split.length - n; i++){
+        const strList = split.slice(i, i+n)
+        nGrams.push(strList.join(' '));
     }
     return nGrams;
 }
@@ -58,6 +60,8 @@ export function smithWaterman(a: string, b: string): number {
             );
         }
     }
+
+    console.log(Math.max(...dp.map(row => Math.max(...row))))
 
     return Math.max(...dp.map(row => Math.max(...row)));
 }
@@ -161,6 +165,13 @@ export function longestCommonSubstring(a: string, b: string): number {
     return max;
 }
 
-export function tfIDFVectorization(content: string): Map<string, number> | null {
-    return null;
+/**
+ * Find all occurrences of patterns in content
+ * @param content 
+ * @param patterns 
+ * @returns [start, end][] where start is the starting index of the pattern and end is the ending index of the pattern
+ */
+export function ahoCorasick(content: string, patterns: string[]): number[][] {
+    return [];
 }
+  

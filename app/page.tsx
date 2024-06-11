@@ -23,12 +23,8 @@ export default function Home() {
   const [plagiarizedResult, setPlagiarizedResult] = useState<PlagiarizeResult>({
     percentage: -1,
     executionTime: 0,
-    plagiarizedPaper: [
-      { title: "Paper 1", href: "https://example.com/paper1.pdf", content: "abcd abcd efgh abcd", plagiarizedList: ["bcd", "d ab", "zzz"], percentage: 20},
-      { title: "Paper 2", href: "https://example.com/paper1.pdf", content: "abcd abcd efgh abcd", plagiarizedList: ["efgh "], percentage: 30},
-      { title: "Paper 3", href: "https://example.com/paper1.pdf", content: "abcd abcd efgh abcd", plagiarizedList: ["gh ab", "abc"], percentage: 50},
-    ],
-    selectedPaper: { title: "Paper 1", href: "https://example.com/paper1.pdf", content: "abcd abcd efgh abcd"}
+    plagiarizedPaper: [],
+    selectedPaper: { title: "", href: "", content: ""}
   });
 
   // From selection by user
@@ -40,6 +36,15 @@ export default function Home() {
     if(size < 1024) return Math.round(size*100)/100 + " KB";
 
     return Math.round(size/1024*100)/100 + " MB";
+  }
+
+  function getTimeFormat(time: number): string {
+    if(time < 1000) return Math.round(time*100)/100 + " ms";
+    time /= 1000;
+    if(time < 60) return Math.round(time*100)/100 + " s";
+    let second = time % 60;
+    time /= 60;
+    return Math.floor(time) + " m " + Math.round(second*100)/100 + " s";
   }
 
   function onFileChanged(e: React.ChangeEvent<HTMLInputElement>) {
@@ -73,6 +78,11 @@ export default function Home() {
     });
   
     return <p className="text-justify text-sm font-normal w-full">{highlightedContent}</p>;
+
+    
+
+
+    
   }
   
 
@@ -94,6 +104,11 @@ export default function Home() {
       }
   
       const data = await res.json();
+      if(!data) {
+        setIsApiLoading(false);
+        alert("An error occured");
+        return;
+      }
       if(data.error) {
         setIsApiLoading(false);
         alert(data.error);
@@ -114,7 +129,7 @@ export default function Home() {
 
   useEffect(() => {
     document.getElementById("marked")?.scrollIntoView();
-  }, [chooseIndex])
+  }, [choosenIndex])
   
   return (
     <main className="flex min-h-screen flex-col items-center justify-between py-4 px-4 sm:px-16 md:px-24 lg:px-36 bg-zinc-950">
@@ -155,10 +170,12 @@ export default function Home() {
           <div className="flex flex-col bg-zinc-900 rounded-xl flex-1 overflow-clip border-16 border-zinc-900">
             <div className="flex gap-2 w-full justify-center">
               <h2 className="mb-2 ">Result</h2>
-              <h2 className="mb-2 text-left font-normal text-sm mt-1">(Done in {plagiarizedResult.executionTime} ms)</h2>
+              <h2 className="mb-2 text-left font-normal text-sm mt-1">(Done in {getTimeFormat(plagiarizedResult.executionTime)})</h2>
             </div>
             <div className="w-full">
-              {getPlagiarizedBlock(plagiarizedResult.selectedPaper.content, plagiarizedResult.plagiarizedPaper[choosenIndex].plagiarizedList)}
+              {plagiarizedResult.plagiarizedPaper.length === 0 ? <p className="text-left text-sm font-normal">{plagiarizedResult.selectedPaper.content}</p> : 
+                getPlagiarizedBlock(plagiarizedResult.selectedPaper.content, plagiarizedResult.plagiarizedPaper[choosenIndex].plagiarizedList)
+              }
             </div>
             <p></p>
           </div>
@@ -166,16 +183,16 @@ export default function Home() {
           {/* Chart */}
           <div className="flex flex-col items-center bg-zinc-900 rounded-xl p-4 w-full sm:w-56 md:w-72 lg:w-80">
             <div className="font-bold text-xl">Plagiarized</div>
-            <PieChart plagiarizedPercentage={plagiarizedResult.percentage}></PieChart>
+            <PieChart plagiarizedPercentage={Math.round(plagiarizedResult.percentage*100)/100}></PieChart>
 
             <div className="gap-3 flex flex-col mt-3 w-full">
 
               {/* Select Button */}
               {plagiarizedResult.plagiarizedPaper.map((paper, index) => (<>
-                <button key={index} onClick={e => chooseIndex(index)} className={"bg-zinc-800 rounded-xl px-2 py-2 w-full h-16 flex gap-4 hover:bg-zinc-700 focus:ring-rose-500 focus:ring-4 " + (choosenIndex!==index ? "" : "ring-4 ring-rose-800")}>
+                <button key={index} onClick={e => chooseIndex(index)} className={"bg-zinc-800 rounded-xl px-2 py-2 w-full h-16 flex gap-2 hover:bg-zinc-700 focus:ring-rose-500 focus:ring-4 " + (choosenIndex!==index ? "" : "ring-4 ring-rose-800")}>
                   
-                  <div className="font-bold flex items-center justify-center ml-2 h-full">
-                    {paper.percentage}%
+                  <div className="font-bold flex items-center justify-center h-full text-sm w-20">
+                    {Math.round(paper.percentage*100)/100}%
                   </div>
                   
                   <div className="text-sm text-left w-full h-full flex items-center">
