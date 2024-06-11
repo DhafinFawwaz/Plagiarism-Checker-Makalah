@@ -176,3 +176,76 @@ export function ahoCorasick(content: string, patterns: string[]): number[][] {
     return [];
 }
   
+
+export function cosineSimilarity(a: string, b: string){
+    const splitA = a.split(' ');
+    const splitB = b.split(' ');
+
+    const intersection = splitA.filter(value => splitB.includes(value));
+    const union: string[] = [];
+
+    for(let i = 0; i < splitA.length; i++){
+        if(!union.includes(splitA[i])) union.push(splitA[i]);
+    }
+    for(let i = 0; i < splitB.length; i++){
+        if(!union.includes(splitB[i])) union.push(splitB[i]);
+    }
+
+    return intersection.length / union.length;
+}
+
+
+export function hammingDistance(a: string, b: string): number {
+    if(a.length !== b.length) return -1;
+
+    let distance = 0;
+    for(let i = 0; i < a.length; i++){
+        if(a[i] !== b[i]) distance++;
+    }
+
+    return distance;
+}
+
+export function kmp(a: string, b: string): boolean {
+    const n = a.length;
+    const m = b.length;
+    const lps = new Array(m).fill(0);
+    let j = 0;
+
+    computeLPSArray(b, m, lps);
+
+    for(let i = 0; i < n; i++){
+        if(a[i] === b[j]){
+            j++;
+        } else {
+            while(j > 0 && a[i] !== b[j]){
+                j = lps[j-1];
+            }
+        }
+
+        if(j === m) return true;
+    }
+
+    return false;
+}
+
+function computeLPSArray(b: string, m: number, lps: number[]){
+    let len = 0;
+    lps[0] = 0;
+    let i = 1;
+
+    while(i < m){
+        if(b[i] === b[len]){
+            len++;
+            lps[i] = len;
+            i++;
+        } else {
+            if(len !== 0){
+                len = lps[len-1];
+            } else {
+                lps[i] = 0;
+                i++;
+            }
+        }
+    }
+}

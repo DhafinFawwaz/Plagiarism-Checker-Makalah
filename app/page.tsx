@@ -141,7 +141,7 @@ export default function Home() {
           
           {/* Drag & drop file */}
           <input id="file-input" type="file" accept=".pdf" hidden onChange={onFileChanged}/>
-          <label htmlFor="file-input" className="w-full bg-zinc-900 rounded-xl flex flex-col items-center justify-center h-full hover:bg-zinc-700 cursor-pointer duration-100">
+          <label htmlFor="file-input" className="w-full bg-zinc-900 rounded-xl flex flex-col items-center justify-center h-full hover:bg-zinc-800 cursor-pointer duration-100">
             <div>Select File Here</div>
             <div className="text-zinc-400 text-sm">PDF File only</div>
           </label>

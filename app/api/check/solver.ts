@@ -1,9 +1,10 @@
 import { PlagiarizeResult } from '@/app/page';
 import { Paper } from '@/app/paper/paper';
 import { PlagiarizedPaper } from '@/app/paper/plagiarized-paper';
-import { shingles } from './algorithm';
+import { cosineSimilarity, hammingDistance, jaccardSimilarity, kmp, levenshteinDistance, shingles } from './algorithm';
 
-const SHINGLES_AMOUNT = 3;
+const SHINGLES_AMOUNT = 5;
+const LEVENSHTEIN_THRESHOLD = 0.5;
   
 // content is still not clean
 export function findPlagiarism(paper: Paper, data: Paper[]): PlagiarizeResult{
@@ -29,10 +30,13 @@ function getPlagiarizedPaper(content: string, data: Paper[]){
     const plagiarizedPaper: PlagiarizedPaper[] = [];
     
     const len = data.length;
+    const userShingles = shingles(content, SHINGLES_AMOUNT);
     for(let i = 0; i < len; i++){
         const plagiarizedContent = data[i].content; // already lowercased in preprocessing
-        const similiarTextList = getSimilarTextList(content, plagiarizedContent);
+        const similiarTextList = getSimilarTextList(userShingles, plagiarizedContent);
         if(similiarTextList.length === 0) continue;
+
+        console.log("(%d/%d)", i+1, len)
         
         plagiarizedPaper.push({
             title: data[i].title,
@@ -50,9 +54,10 @@ function getPlagiarizedPaper(content: string, data: Paper[]){
 
 
 // find list of substring in userText that is similar to substring in plagiarizedText
-function getSimilarTextList(userText: string, plagiarizedText: string): number[][] {
-    const userShingles = shingles(userText, SHINGLES_AMOUNT);
+function getSimilarTextList(userShingles: string[], plagiarizedText: string): number[][] {
+    const startTime = performance.now();
     const plagiarizedShingles = shingles(plagiarizedText, SHINGLES_AMOUNT);
+    
     const similarText: number[][] = [];
 
     for(let i = 0; i < userShingles.length; i++){
@@ -66,12 +71,34 @@ function getSimilarTextList(userText: string, plagiarizedText: string): number[]
             
 // optimize this part, might use a non exact search
 function isShinglesListContainsShingles(shinglesList: string[], shingles: string): boolean {
-    // return shinglesList.includes(shingles);
+    return shinglesList.includes(shingles);
 
-    for(let i = 0; i < shinglesList.length; i++){
-        if(shinglesList[i] === shingles) return true;
-    }
-    return false;
+    // for(let i = 0; i < shinglesList.length; i++){
+    //     if(shinglesList[i] === shingles) return true;
+    // }
+    // return false;
+
+    // for(let i = 0; i < shinglesList.length; i++){
+    //     if(kmp(shinglesList[i], shingles)) return true;
+    // }
+    // return false;
+    
+    // for(let i = 0; i < shinglesList.length; i++){
+    //     const longest = Math.max(shinglesList[i].length, shingles.length);
+    //     if(levenshteinDistance(shinglesList[i], shingles) <= longest * LEVENSHTEIN_THRESHOLD) return true;
+    // }
+    // return false;
+
+    // for(let i = 0; i < shinglesList.length; i++){
+    //     if(cosineSimilarity(shinglesList[i], shingles) > 0.5) return true;
+    // }
+    // return false;
+
+    // for(let i = 0; i < shinglesList.length; i++){
+    //     const longest = Math.max(shinglesList[i].length, shingles.length);
+    //     if(hammingDistance(shinglesList[i], shingles) > 0.5) return true;
+    // }
+    // return false;
 }
 
 // Combine overlapping
