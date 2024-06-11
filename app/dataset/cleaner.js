@@ -17,9 +17,13 @@ function clean(content) {
     content = content.replace(/----------------Page \(\w+\) Break----------------/g, '');
     return content;
 }
+function cleanDestruct(content) {
+    content = content.toLowerCase();
+    return content;
+}
 
 for(let i = 0; i < dataRaw.length; i++){
-    dataRaw[i].content = clean(dataRaw[i].content);
+    dataRaw[i].content = cleanDestruct(clean(dataRaw[i].content));
     dataRaw[i].title = clean(dataRaw[i].title);
 }
 

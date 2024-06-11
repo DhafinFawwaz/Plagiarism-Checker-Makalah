@@ -3,7 +3,7 @@ import { Paper } from '@/app/paper/paper';
 import { PlagiarizedPaper } from '@/app/paper/plagiarized-paper';
 import { shingles } from './algorithm';
 
-const N_GRAMS = 3;
+const SHINGLES_AMOUNT = 3;
   
 // content is still not clean
 export function findPlagiarism(paper: Paper, data: Paper[]): PlagiarizeResult{
@@ -30,7 +30,7 @@ function getPlagiarizedPaper(content: string, data: Paper[]){
     
     const len = data.length;
     for(let i = 0; i < len; i++){
-        const plagiarizedContent = cleanDestruct(data[i].content);
+        const plagiarizedContent = data[i].content; // already lowercased in preprocessing
         const similiarTextList = getSimilarTextList(content, plagiarizedContent);
         if(similiarTextList.length === 0) continue;
         
@@ -51,13 +51,13 @@ function getPlagiarizedPaper(content: string, data: Paper[]){
 
 // find list of substring in userText that is similar to substring in plagiarizedText
 function getSimilarTextList(userText: string, plagiarizedText: string): number[][] {
-    const userNGrams = shingles(userText, N_GRAMS);
-    const plagiarizedNGrams = shingles(plagiarizedText, N_GRAMS);
+    const userShingles = shingles(userText, SHINGLES_AMOUNT);
+    const plagiarizedShingles = shingles(plagiarizedText, SHINGLES_AMOUNT);
     const similarText: number[][] = [];
 
-    for(let i = 0; i < userNGrams.length; i++){
-        if(isNGramsListContainsNGrams(plagiarizedNGrams, userNGrams[i])){
-            similarText.push([i, i+N_GRAMS]);
+    for(let i = 0; i < userShingles.length; i++){
+        if(isShinglesListContainsShingles(plagiarizedShingles, userShingles[i])){
+            similarText.push([i, i+SHINGLES_AMOUNT]);
         }
     }
 
@@ -65,8 +65,13 @@ function getSimilarTextList(userText: string, plagiarizedText: string): number[]
 }
             
 // optimize this part, might use a non exact search
-function isNGramsListContainsNGrams(nGrams: string[], nGram: string): boolean {
-    return nGrams.includes(nGram);
+function isShinglesListContainsShingles(shinglesList: string[], shingles: string): boolean {
+    // return shinglesList.includes(shingles);
+
+    for(let i = 0; i < shinglesList.length; i++){
+        if(shinglesList[i] === shingles) return true;
+    }
+    return false;
 }
 
 // Combine overlapping
