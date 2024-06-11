@@ -10,12 +10,13 @@ export function findPlagiarism(paper: Paper, data: Paper[]): PlagiarizeResult{
     const startTime = performance.now();
     const dirtyContent = paper.content;
     const content = clean(dirtyContent);
+    const contentDestructed = cleanDestruct(content);
     
-    const plagiarizedPaper = getPlagiarizedPaper(content, data);
+    const plagiarizedPaper = getPlagiarizedPaper(contentDestructed, data);
     const result: PlagiarizeResult = {
         selectedPaper: { title: paper.title, href: paper.href, content: content},
         plagiarizedPaper: plagiarizedPaper,
-        percentage: calculateAllPercentage(paper.content, plagiarizedPaper),
+        percentage: calculateAllPercentage(contentDestructed, plagiarizedPaper),
         executionTime: 0, // must be set at the end to ensure the correct time
     };
 
@@ -28,10 +29,9 @@ function getPlagiarizedPaper(content: string, data: Paper[]){
     const plagiarizedPaper: PlagiarizedPaper[] = [];
     
     const len = data.length; // dont forget change to this
-    for(let i = 2216; i < 2217; i++){
+    for(let i = 2216; i < 2220; i++){
         const plagiarizedContent = cleanDestruct(data[i].content);
-        const userContent = cleanDestruct(content);
-        const similiarTextList = getSimilarTextList(userContent, plagiarizedContent);
+        const similiarTextList = getSimilarTextList(content, plagiarizedContent);
         if(similiarTextList.length === 0) continue;
         
         plagiarizedPaper.push({
@@ -39,7 +39,7 @@ function getPlagiarizedPaper(content: string, data: Paper[]){
             href: data[i].href,
             content: plagiarizedContent,
             plagiarizedList: similiarTextList,
-            percentage: calculatePercentage(userContent, similiarTextList),
+            percentage: calculatePercentage(content, similiarTextList),
         });
     }
 
@@ -50,73 +50,76 @@ function getPlagiarizedPaper(content: string, data: Paper[]){
 
 
 // find list of substring in userText that is similar to substring in plagiarizedText
-function getSimilarTextList(userText: string, plagiarizedText: string): string[] {
-    const userNGrams = shingles(userText, N_GRAMS);
-    const plagiarizedNGrams = shingles(plagiarizedText, N_GRAMS);
-    const similarText: string[] = [];
-
-    for(let i = 0; i < userNGrams.length; i++){
-        if(plagiarizedNGrams.includes(userNGrams[i])){ // optimize this part, might use a non exact search
-            similarText.push(userNGrams[i]);
-        }
-    }
-
-    return similarText;
-}
-
-function getSimilarTextListAsRange(userText: string, plagiarizedText: string): number[][] {
+function getSimilarTextList(userText: string, plagiarizedText: string): number[][] {
     const userNGrams = shingles(userText, N_GRAMS);
     const plagiarizedNGrams = shingles(plagiarizedText, N_GRAMS);
     const similarText: number[][] = [];
 
     for(let i = 0; i < userNGrams.length; i++){
-        if(plagiarizedNGrams.includes(userNGrams[i])){ // optimize this part, might use a non exact search
+        if(isNGramsListContainsNGrams(plagiarizedNGrams, userNGrams[i])){
             similarText.push([i, i+N_GRAMS]);
         }
     }
 
-    return similarText;
+    return combineOverlapping(similarText);
+}
+            
+// optimize this part, might use a non exact search
+function isNGramsListContainsNGrams(nGrams: string[], nGram: string): boolean {
+    return nGrams.includes(nGram);
 }
 
+// Combine overlapping
+  // [[1, 3], [2, 4], [5, 7]] => [[1, 4], [5, 7]]
+function combineOverlapping(plagiarizedList: number[][]): number[][] {
+    const result = [];
+    const len = plagiarizedList.length;
+    if(len === 0) return [];
 
-function calculateAllPercentage(content: string, plagiarizeResult: PlagiarizedPaper[]): number {
-    let markedContent = `${content}`; // copy
-
-    for(let i = 0; i < plagiarizeResult.length; i++){
-        for(let j = 0; j < plagiarizeResult[i].plagiarizedList.length; j++){
-            markedContent = markedContent.replace(plagiarizeResult[i].plagiarizedList[j], '_'.repeat(plagiarizeResult[i].plagiarizedList[j].length));
+    let [start, end] = plagiarizedList[0];
+    for(let i = 1; i < len; i++) {
+        const [s, e] = plagiarizedList[i];
+        if(s <= end) {
+            end = Math.max(end, e);
+        } else {
+            result.push([start, end]);
+            [start, end] = [s, e];
         }
     }
-
-    let totalMarked = 0;
-    for(let i = 0; i < markedContent.length; i++){
-        if(markedContent[i] === '_') totalMarked++;
-    }
-
-    console.log(markedContent)
-
-    return totalMarked / content.length * 100;
+    result.push([start, end]);
+    return result;
 }
 
 
-function calculatePercentage(content: string, plagiarizedList: string[]): number {
-    let markedContent = `${content}`; // copy
+// combine all overlapping, then calculate the percentage
+function calculateAllPercentage(content: string, plagiarizeResult: PlagiarizedPaper[]): number {
+    if(plagiarizeResult.length === 0) return 0;
 
+    let result = plagiarizeResult[0].plagiarizedList;
+    for(let i = 0; i < plagiarizeResult.length; i++){
+        result = combineOverlapping(result.concat(plagiarizeResult[i].plagiarizedList));
+    }
+    const length = content.split(' ').length;
+    let total = 0;
+    for(let i = 0; i < result.length; i++){
+        total += result[i][1] - result[i][0];
+    }
+
+    return total / length * 100;
+}
+
+
+function calculatePercentage(content: string, plagiarizedList: number[][]): number {
+    const length = content.split(' ').length;
+    let total = 0;
     for(let i = 0; i < plagiarizedList.length; i++){
-        markedContent = markedContent.replace(plagiarizedList[i], '_'.repeat(plagiarizedList[i].length));
+        total += plagiarizedList[i][1] - plagiarizedList[i][0];
     }
-
-    let totalMarked = 0;
-    for(let i = 0; i < markedContent.length; i++){
-        if(markedContent[i] === '_') totalMarked++;
-    }
-
-    return totalMarked / content.length * 100;
-
+    return total / length * 100;
 }
-
 
 function clean(content: string) {
+    content = content.trim();
     content = content.replace(/\r/g, '').replace(/\n/g, ' ').replace(/\s+/g, ' ');
     content = content.replace(/----------------Page \(\w+\) Break----------------/g, '');
     return content;

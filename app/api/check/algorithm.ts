@@ -8,7 +8,8 @@
 export function shingles(content: string, n: number): string[] {
     const nGrams: string[] = [];
     const split = content.split(' ');
-    for(let i = 0; i < split.length - n; i++){
+    const lenMinusN = split.length - n + 1;
+    for(let i = 0; i < lenMinusN; i++){
         const strList = split.slice(i, i+n)
         nGrams.push(strList.join(' '));
     }

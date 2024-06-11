@@ -4,6 +4,7 @@ import PieChart from "./components/PieChart";
 import React, { useEffect, useState } from "react";
 import { Paper } from "./paper/paper";
 import { PlagiarizedPaper } from "./paper/plagiarized-paper";
+import { shingles } from "./api/check/algorithm";
 
 export type PlagiarizeResult = {
   percentage: number;
@@ -56,34 +57,31 @@ export default function Home() {
     }
   }
 
+
   function block(content: string){
-    return <span id="marked" className="inline bg-indigo-600">{content}</span>;
+    return <span id="marked" className="inline bg-indigo-600"> {content} </span>;
   }
-  function getPlagiarizedBlock(content: string, plagiarizedList: string[]): JSX.Element {
-    // sort
-    plagiarizedList.sort((a, b) => b.length - a.length);
+  function getPlagiarizedBlock(content: string, plagiarizedList: number[][]): JSX.Element {
+    const split = content.split(" ");
+    const result = [];
 
-    const escapeRegExp = (string: string) =>
-      string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  
-    const regexPattern = plagiarizedList.map(escapeRegExp).join('|');
-    const regex = new RegExp(`(${regexPattern})`, 'gi');
-  
-    const parts = content.split(regex);
-    const highlightedContent = parts.map((part, index) => {
-      if (plagiarizedList.some(plagiarized => new RegExp(`^${escapeRegExp(plagiarized)}$`, 'i').test(part))) {
-        return block(part);
+    let index = 0;
+    result.push(split.slice(0, plagiarizedList[0][0]).join(" "));
+    for(let i = 0; i < plagiarizedList.length; i++){
+      result.push(block(split.slice(plagiarizedList[i][0], plagiarizedList[i][1]).join(" ")));
+      if(i+1 < plagiarizedList.length) {
+        result.push(split.slice(plagiarizedList[i][1], plagiarizedList[i+1][0]).join(" "));
+      } else {
+        result.push(split.slice(plagiarizedList[i][1]).join(" "));
       }
-      return part;
-    });
-  
-    return <p className="text-justify text-sm font-normal w-full">{highlightedContent}</p>;
+    }
 
-    
-
-
-    
+    return <p className="text-left text-sm font-normal">{result}</p>;
   }
+
+
+  
+  
   
 
   // API call
