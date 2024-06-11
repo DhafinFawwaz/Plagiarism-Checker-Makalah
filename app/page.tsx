@@ -13,6 +13,8 @@ export type PlagiarizeResult = {
   executionTime: number;
 }
 
+const apiUrl = "/api/check";
+
 export default function Home() {
   // from user iput
   const [pdfFile, setPdfFile] = useState<File>(new File([], "-", undefined));
@@ -92,7 +94,7 @@ export default function Home() {
     formData.append("file", pdfFile);
     setIsApiLoading(true);
     try{
-      const res = await fetch("/api/check", {
+      const res = await fetch(apiUrl, {
         method: "POST",
         body: formData
       });
