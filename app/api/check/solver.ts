@@ -28,8 +28,8 @@ export function findPlagiarism(paper: Paper, data: Paper[]): PlagiarizeResult{
 function getPlagiarizedPaper(content: string, data: Paper[]){
     const plagiarizedPaper: PlagiarizedPaper[] = [];
     
-    const len = data.length; // dont forget change to this
-    for(let i = 2216; i < 2220; i++){
+    const len = data.length;
+    for(let i = 0; i < len; i++){
         const plagiarizedContent = cleanDestruct(data[i].content);
         const similiarTextList = getSimilarTextList(content, plagiarizedContent);
         if(similiarTextList.length === 0) continue;
