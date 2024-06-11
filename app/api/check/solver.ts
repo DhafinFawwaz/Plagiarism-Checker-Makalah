@@ -26,3 +26,4 @@ function clean(content: string) {
     content = content.replace(/----------------Page \(\w+\) Break----------------/g, '');
     return content;
 }
+
