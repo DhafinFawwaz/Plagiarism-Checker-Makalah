@@ -93,7 +93,7 @@ async function fetchPDFBuffer(url) {
         const buffer = await response.arrayBuffer();
         return buffer;
     } catch (error) {
-        console.log('\x1b[31m\n%s\nreturning empty array buffer\x1b[0m', error.message);
+        console.log('\x1b[31m%s\x1b[0m', error.message);
         return null;
     }
 }
@@ -132,7 +132,7 @@ async function extractPdfTextContentFromBuffer(buffer) {
 
         return content
     } catch (error) {
-        console.log('\x1b[31m\n%s\nreturning empty string\x1b[0m', error.message);
+        console.log('\x1b[31m%s\nreturning empty string\x1b[0m', error.message);
 
         return "";
     }
@@ -151,6 +151,7 @@ async function saveNotFoundToFile(data){
 
 // main
 async function main(...args){
+    process.removeAllListeners('warning')
 
     /** @type {Paper[]} */
     const data = [];
@@ -178,7 +179,6 @@ async function main(...args){
                 data.push(allPdfLinks[index]);
             }
 
-            // saveToFile(data);
             currentPromises.length = 0;
 
             const duration = performance.now() - startTime;

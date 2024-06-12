@@ -66,7 +66,6 @@ export default function Home() {
     const split = content.split(" ");
     const result = [];
 
-    let index = 0;
     result.push(split.slice(0, plagiarizedList[0][0]).join(" "));
     for(let i = 0; i < plagiarizedList.length; i++){
       result.push(block(split.slice(plagiarizedList[i][0], plagiarizedList[i][1]).join(" ")));

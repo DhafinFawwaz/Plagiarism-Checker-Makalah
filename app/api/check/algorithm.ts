@@ -6,14 +6,14 @@
  * @returns 
  */
 export function shingles(content: string, n: number): string[] {
-    const nGrams: string[] = [];
+    const shingle: string[] = [];
     const split = content.split(' ');
     const lenMinusN = split.length - n + 1;
     for(let i = 0; i < lenMinusN; i++){
         const strList = split.slice(i, i+n)
-        nGrams.push(strList.join(' '));
+        shingle.push(strList.join(' '));
     }
-    return nGrams;
+    return shingle;
 }
 
 /**
@@ -70,22 +70,22 @@ export function smithWaterman(a: string, b: string): number {
 export function levenshteinDistance(a: string, b: string): number {
     const n = a.length;
     const m = b.length;
-    const dp: number[][] = new Array(n+1).fill(0).map(() => new Array(m+1).fill(0));
+    const mat: number[][] = new Array(n+1).fill(0).map(() => new Array(m+1).fill(0));
 
-    for(let i = 0; i <= n; i++) dp[i][0] = i;
-    for(let i = 0; i <= m; i++) dp[0][i] = i;
+    for(let i = 0; i <= n; i++) mat[i][0] = i;
+    for(let i = 0; i <= m; i++) mat[0][i] = i;
 
     for(let i = 1; i <= n; i++){
         for(let j = 1; j <= m; j++){
-            dp[i][j] = Math.min(
-                dp[i-1][j] + 1,
-                dp[i][j-1] + 1,
-                dp[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1)
+            mat[i][j] = Math.min(
+                mat[i-1][j] + 1,
+                mat[i][j-1] + 1,
+                mat[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1)
             );
         }
     }
 
-    return dp[n][m];
+    return mat[n][m];
 }
 
 /**

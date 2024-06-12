@@ -4,7 +4,7 @@ import { PlagiarizedPaper } from '@/app/paper/plagiarized-paper';
 import { cosineSimilarity, hammingDistance, jaccardSimilarity, kmp, levenshteinDistance, shingles } from './algorithm';
 
 const SHINGLES_AMOUNT = 5;
-const LEVENSHTEIN_THRESHOLD = 0.5;
+const LEVENSHTEIN_THRESHOLD = 0.2;
   
 export function findPlagiarism(paper: Paper, data: Paper[]): PlagiarizeResult{
     const startTime = performance.now();
@@ -31,7 +31,7 @@ function getPlagiarizedPaper(content: string, data: Paper[]){
     const len = data.length;
     const userShingles = shingles(content, SHINGLES_AMOUNT);
     for(let i = 0; i < len; i++){
-        const plagiarizedContent = data[i].content; // already lowercased in preprocessing
+        const plagiarizedContent = data[i].content;
         const similiarTextList = getSimilarTextList(userShingles, plagiarizedContent);
         if(similiarTextList.length === 0) continue;
 
@@ -46,15 +46,12 @@ function getPlagiarizedPaper(content: string, data: Paper[]){
         });
     }
 
-    // sort by percentage
     plagiarizedPaper.sort((a, b) => b.percentage - a.percentage);
     return plagiarizedPaper;
 }
 
 
-// find list of substring in userText that is similar to substring in plagiarizedText
 function getSimilarTextList(userShingles: string[], plagiarizedText: string): number[][] {
-    const startTime = performance.now();
     const plagiarizedShingles = shingles(plagiarizedText, SHINGLES_AMOUNT);
     
     const similarText: number[][] = [];
@@ -68,40 +65,25 @@ function getSimilarTextList(userShingles: string[], plagiarizedText: string): nu
     return combineOverlapping(similarText);
 }
             
-// optimize this part, might use a non exact search
 function isShinglesListContainsShingles(shinglesList: string[], shingles: string): boolean {
-    return shinglesList.includes(shingles);
-
-    // for(let i = 0; i < shinglesList.length; i++){
-    //     if(shinglesList[i] === shingles) return true;
-    // }
-    // return false;
-
-    // for(let i = 0; i < shinglesList.length; i++){
-    //     if(kmp(shinglesList[i], shingles)) return true;
-    // }
-    // return false;
     
-    // for(let i = 0; i < shinglesList.length; i++){
-    //     const longest = Math.max(shinglesList[i].length, shingles.length);
-    //     if(levenshteinDistance(shinglesList[i], shingles) <= longest * LEVENSHTEIN_THRESHOLD) return true;
-    // }
-    // return false;
+    // Exact
+    for(let i = 0; i < shinglesList.length; i++){
+        if(kmp(shinglesList[i], shingles)) return true;
+    }
 
-    // for(let i = 0; i < shinglesList.length; i++){
-    //     if(cosineSimilarity(shinglesList[i], shingles) > 0.5) return true;
-    // }
-    // return false;
+    // Approximate
+    for(let i = 0; i < shinglesList.length; i++){
+        const longest = Math.max(shinglesList[i].length, shingles.length);
+        if(levenshteinDistance(shinglesList[i], shingles) <= longest * LEVENSHTEIN_THRESHOLD) return true;
+    }
 
-    // for(let i = 0; i < shinglesList.length; i++){
-    //     const longest = Math.max(shinglesList[i].length, shingles.length);
-    //     if(hammingDistance(shinglesList[i], shingles) > 0.5) return true;
-    // }
-    // return false;
+    return false;
 }
 
 // Combine overlapping
-  // [[1, 3], [2, 4], [5, 7]] => [[1, 4], [5, 7]]
+// [[1, 3], [2, 4], [5, 7]] => [[1, 4], [5, 7]]
+
 function combineOverlapping(plagiarizedList: number[][]): number[][] {
     const result = [];
     const len = plagiarizedList.length;
@@ -122,7 +104,6 @@ function combineOverlapping(plagiarizedList: number[][]): number[][] {
 }
 
 
-// combine all overlapping, then calculate the percentage
 function calculateAllPercentage(content: string, plagiarizeResult: PlagiarizedPaper[]): number {
     if(plagiarizeResult.length === 0) return 0;
 

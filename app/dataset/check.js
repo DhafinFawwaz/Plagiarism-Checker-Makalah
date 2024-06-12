@@ -1,6 +1,7 @@
 import { argv } from "process";
 import dataClean from "./json/data-clean.json" with { type: "json"};
 import dataRaw from "./json/data-raw.json" with { type: "json"};
+import notFound from "./json/not-found.json" with { type: "json"};
 
 async function main(...args){
     console.log(dataClean.length);
