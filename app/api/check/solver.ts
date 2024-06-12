@@ -107,11 +107,12 @@ function combineOverlapping(plagiarizedList: number[][]): number[][] {
 
 function calculateAllPercentage(content: string, plagiarizeResult: PlagiarizedPaper[]): number {
     if(plagiarizeResult.length === 0) return 0;
-
     let result = plagiarizeResult[0].plagiarizedList;
     for(let i = 0; i < plagiarizeResult.length; i++){
-        result = combineOverlapping(result.concat(plagiarizeResult[i].plagiarizedList));
+        result = result.concat(plagiarizeResult[i].plagiarizedList);
     }
+    result = result.sort((a, b) => a[0] - b[0]);
+    result = combineOverlapping(result);
     return calculatePercentage(content, result);
 }
 
