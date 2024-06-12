@@ -66,7 +66,8 @@ function getSimilarTextList(userShingles: string[], plagiarizedText: string): nu
 }
             
 function isShinglesListContainsShingles(shinglesList: string[], shingles: string): boolean {
-    
+    return shinglesList.includes(shingles);
+
     // Exact
     for(let i = 0; i < shinglesList.length; i++){
         if(kmp(shinglesList[i], shingles)) return true;

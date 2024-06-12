@@ -7,6 +7,7 @@
  */
 export function shingles(content: string, n: number): string[] {
     const shingle: string[] = [];
+
     const split = content.split(' ');
     const lenMinusN = split.length - n + 1;
     for(let i = 0; i < lenMinusN; i++){
