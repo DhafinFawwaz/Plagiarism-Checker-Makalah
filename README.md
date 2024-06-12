@@ -1,4 +1,4 @@
-# Plagiarism Checker
+# Plagiarism Checker for Paper in Rinaldi Munir Website
 
 ## Author
 - 13522084, Dhafin Fawwaz Ikramullah
