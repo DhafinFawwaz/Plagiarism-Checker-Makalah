@@ -111,13 +111,7 @@ function calculateAllPercentage(content: string, plagiarizeResult: PlagiarizedPa
     for(let i = 0; i < plagiarizeResult.length; i++){
         result = combineOverlapping(result.concat(plagiarizeResult[i].plagiarizedList));
     }
-    const length = content.split(' ').length;
-    let total = 0;
-    for(let i = 0; i < result.length; i++){
-        total += result[i][1] - result[i][0];
-    }
-
-    return total / length * 100;
+    return calculatePercentage(content, result);
 }
 
 
